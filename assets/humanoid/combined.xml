@@ -1,0 +1,4 @@
+<mujoco model="combined_scene">
+    <include file="ball.xml"/>
+    <include file="humanoid.xml"/>
+</mujoco>

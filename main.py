@@ -10,8 +10,12 @@ import mujoco.viewer
 
 HUMANOID_SCENE_PATH = Path('.') / "assets" / "humanoid" / "humanoid.xml"
 OP3_SCENE_PATH = Path('.') / "assets" / "op3" / "scene.xml"
+BALL_SCENE_PATH = Path('.') / "assets" / "ball" / "ball.xml"
+COMBINED_SCENE_PATH =Path('.') / "assets" / "humanoid" / "combined.xml"
 
-mj_model = mujoco.MjModel.from_xml_path(str(HUMANOID_SCENE_PATH))
+# mj_model = mujoco.MjModel.from_xml_path(str(HUMANOID_SCENE_PATH))
+mj_model = mujoco.MjModel.from_xml_path(str(COMBINED_SCENE_PATH))
+
 mj_data = mujoco.MjData(mj_model)
 
 mjx_model = mjx.put_model(mj_model)
