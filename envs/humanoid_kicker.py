@@ -55,34 +55,18 @@ class HumanoidKicker(PipelineEnv):
         sys = mjcf.load(str(path))
 
         super().__init__(sys, backend='mjx', **kwargs)
-
-        self.ball_index = self.sys.body.index('soccer_ball')
-        self.goal_index = self.sys.body.index('goal')
-        self.humanoid_dofs = self.sys.body.index('humanoid')
-
+    
     def reset(self, rng: jp.ndarray) -> State:
         rng, rng1, rng2 = jax.random.split(rng, 3)
 
-        # Humanoid's qpos and qvel initialization
-        humanoid_qpos = self.sys.init_q[:self.humanoid_dofs] + jax.random.uniform(
-            rng1, (self.humanoid_dofs,), minval=-0.01, maxval=0.01
+        low, hi = -0.01, 0.01
+        qpos = self.sys.init_q + jax.random.uniform(
+            rng1, (self.sys.q_size(),), minval=low, maxval=hi
         )
-        humanoid_qvel = jax.random.uniform(
-            rng2, (self.humanoid_dofs,), minval=-0.01, maxval=0.01
+        qvel = jax.random.uniform(
+            rng2, (self.sys.qd_size(),), minval=low, maxval=hi
         )
 
-        # Ball and goal use exact XML-defined positions and zero velocities
-        ball_qpos = self.sys.init_q[self.ball_dofs_start:self.ball_dofs_end]
-        ball_qvel = jp.zeros(self.ball_dofs_end - self.ball_dofs_start)
-
-        goal_qpos = self.sys.init_q[self.goal_dofs_start:self.goal_dofs_end]
-        goal_qvel = jp.zeros(self.goal_dofs_end - self.goal_dofs_start)
-
-        # Combine all qpos and qvel
-        qpos = jp.concatenate([humanoid_qpos, ball_qpos, goal_qpos])
-        qvel = jp.concatenate([humanoid_qvel, ball_qvel, goal_qvel])
-
-        # Initialize pipeline state
         pipeline_state = self.pipeline_init(qpos, qvel)
         obs = self._get_obs(pipeline_state, jp.zeros(self.sys.act_size()))
         reward, done, zero = jp.zeros(3)
@@ -91,6 +75,7 @@ class HumanoidKicker(PipelineEnv):
             'kickReward': zero,
         }
         return State(pipeline_state, obs, reward, done, metrics)
+
     
     def step(self, state: State, action: jp.ndarray) -> State:
         # Scale action to actuator range
