@@ -28,7 +28,11 @@ def stabilization_reward(pipeline_state: base.State, action: jp.ndarray, obs, ta
     control_cost = 0.01 * jp.sum(jp.square(action))
 
     reward = height_reward + 1 - control_cost
-    return reward
+
+    fallen_threshold = 0.5
+    done = torso_height < fallen_threshold
+    
+    return reward, done
 
 def calculate_kick_reward(pipeline_state: base.State, action: jp.ndarray, obs):
 
@@ -121,6 +125,7 @@ class HumanoidKicker(PipelineEnv):
             'kickReward': zero,
         }
         return State(pipeline_state, obs, reward, done, metrics)
+
     
     def step(self, state: State, action: jp.ndarray) -> State:
         # Scale action to actuator range
@@ -140,6 +145,8 @@ class HumanoidKicker(PipelineEnv):
         kickReward, done = calculate_kick_reward(pipeline_state, action, obs)
         standReward = stabilization_reward(pipeline_state, action, obs)
         
+        done = doneKick + doneStand
+
         #Control cost already calculated in both functions^
         reward = kickReward + standReward #need to linearly decrease one and increase the other.
 
